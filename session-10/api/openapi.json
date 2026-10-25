@@ -1,0 +1,100 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "AP Review Items (sandbox)",
+    "description": "Creates and reads review items in the sandbox Accounts Payable review queue. Sandbox only: no payments are approved or released.",
+    "version": "1.0.0"
+  },
+  "host": "YOUR-APP-NAME.azurewebsites.net",
+  "basePath": "/",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "apiKey": { "type": "apiKey", "name": "x-api-key", "in": "header" }
+  },
+  "security": [{ "apiKey": [] }],
+  "paths": {
+    "/api/review-items": {
+      "post": {
+        "operationId": "CreateReviewItem",
+        "summary": "Create a review item",
+        "description": "Creates one review item in the sandbox AP review queue for an invoice that has an exception. Call only after the user has confirmed the summary. Returns the new item, including its ID.",
+        "parameters": [
+          { "name": "body", "in": "body", "required": true, "schema": { "$ref": "#/definitions/NewReviewItem" } }
+        ],
+        "responses": {
+          "201": { "description": "Review item created", "schema": { "$ref": "#/definitions/ReviewItem" } },
+          "400": { "description": "Validation failed", "schema": { "$ref": "#/definitions/Error" } },
+          "401": { "description": "Missing or wrong API key", "schema": { "$ref": "#/definitions/Error" } }
+        }
+      },
+      "get": {
+        "operationId": "ListReviewItems",
+        "summary": "List review items",
+        "description": "Lists every review item in the sandbox queue.",
+        "responses": {
+          "200": { "description": "All review items", "schema": { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/definitions/ReviewItem" } } } } }
+        }
+      }
+    },
+    "/api/review-items/{id}": {
+      "get": {
+        "operationId": "GetReviewItem",
+        "summary": "Get a review item",
+        "description": "Gets one review item by its ID, for example RVW-1001.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "string", "description": "Review item ID, for example RVW-1001" }
+        ],
+        "responses": {
+          "200": { "description": "The review item", "schema": { "$ref": "#/definitions/ReviewItem" } },
+          "404": { "description": "Not found", "schema": { "$ref": "#/definitions/Error" } }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Evidence": {
+      "type": "object",
+      "required": ["source", "excerpt"],
+      "properties": {
+        "source": { "type": "string", "description": "Document and clause, for example 'FIN-POL-007 section 3'" },
+        "excerpt": { "type": "string", "description": "The rule text relied on" }
+      }
+    },
+    "NewReviewItem": {
+      "type": "object",
+      "required": ["title", "invoiceNumber", "vendorName", "amountAED", "exceptionType", "severity", "evidence", "recommendedAction"],
+      "properties": {
+        "title": { "type": "string", "description": "Short title, for example 'Price variance - INV-10442 - Gulf Office Supplies'" },
+        "invoiceNumber": { "type": "string", "description": "Invoice number, for example INV-10442" },
+        "vendorName": { "type": "string", "description": "Supplier name" },
+        "amountAED": { "type": "number", "description": "Invoice total in AED" },
+        "exceptionType": { "type": "string", "enum": ["NoPO", "QuantityMismatch", "PriceVariance", "PossibleDuplicate", "BankDetailMismatch", "NewVendor", "BlockedVendor"], "description": "Exception type from the AP Review Item Triage Guide" },
+        "severity": { "type": "string", "enum": ["High", "Medium", "Low"], "description": "Severity from the AP Review Item Triage Guide section 2" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/Evidence" }, "description": "At least one cited rule" },
+        "recommendedAction": { "type": "string", "description": "What the reviewer should check or decide" }
+      }
+    },
+    "ReviewItem": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Review item ID, for example RVW-1001" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "title": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "vendorName": { "type": "string" },
+        "amountAED": { "type": "number" },
+        "exceptionType": { "type": "string" },
+        "severity": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/Evidence" } },
+        "recommendedAction": { "type": "string" }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": { "error": { "type": "string" }, "details": { "type": "array", "items": { "type": "string" } } }
+    }
+  }
+}

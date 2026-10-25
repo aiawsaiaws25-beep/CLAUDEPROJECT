@@ -1,0 +1,12 @@
+{
+  "name": "review-items-sandbox-api",
+  "version": "1.0.0",
+  "description": "Sandbox AP review-item API for the Session 10 Copilot Studio agent",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
